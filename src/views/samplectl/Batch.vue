@@ -7,17 +7,6 @@
       <el-button class="filter-item" @click="handleDownload" type="primary" icon="document">导出</el-button>
     </div>
     <el-table :key="tableKey" :data="list" border highlight-current-row style="width: 100%">
-      <el-table-column label="序号">
-        <template align="center" width="65" scope="scope">
-          <span>{{ scope.row.id }}</span>
-        </template>
-      </el-table-column>
-
-      <el-table-column label="名称">
-        <template align="center" width="65" scope="scope">
-          <span>{{ scope.row.name }}</span>
-        </template>
-      </el-table-column>
 
       <el-table-column label="所属机构">
         <template align="center" width="40" scope="scope">
@@ -75,6 +64,12 @@
         </template>
       </el-table-column>
 
+      <el-table-column label="样品信息">
+        <template align="center" width="65" scope="scope">
+          <span class="link-type" @click="handleFetchSamples(scope.row)">查看样品信息</span>
+        </template>
+      </el-table-column>
+
 
       <el-table-column align="center" label="操作" width="150">
         <template scope="scope">
@@ -97,10 +92,53 @@
 
     <el-dialog
     :title="textMap[dialogStatus]" :visible.sync="dialogFormVisible">
-      <el-form class="smapll-space" :model="temp" label-position="left" label-width="70px" style="width:400px; margin-left: 50px">
-        <el-form-item label="名称">
-          <el-input v-model="temp.name"></el-input>
+      <el-form class="smapll-space" :model="temp" label-position="left" label-width="120px" style="width:400px; margin-left: 50px">
+        <el-form-item label="所属机构">
+          <el-select @change='clearContact' v-model="temp.agency_id" placeholder="选择合作伙伴">
+            <el-option v-for="item in agenciesList" :key="item.id" :label="item.name" :value="item.id"></el-option>
+          </el-select>
+
         </el-form-item>
+
+        <el-form-item label="联系人信息">
+          <el-select v-model="temp.contact_id" placeholder="选择联系人">
+            <el-option v-for="item in contactsList" :key="item.id" :label="item.name" :value="item.id" v-show="item.agency_id === temp.agency_id"></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="寄送时间">
+          <el-date-picker v-model="temp.deliver_time" type="datetime" placeholder="选择日期时间">
+          </el-date-picker>
+        </el-form-item>
+        <el-form-item label="到达时间">
+          <el-date-picker v-model="temp.arrive_time" type="datetime" placeholder="选择日期时间">
+          </el-date-picker>
+        </el-form-item>
+        <el-form-item label="快递单号">
+          <el-input v-model="temp.express_num"></el-input>
+        </el-form-item>
+        <el-form-item label="入库时间">
+          <el-date-picker v-model="temp.store_time" type="datetime" placeholder="选择日期时间">
+          </el-date-picker>
+        </el-form-item>
+        <el-form-item label="存储位置及温度">
+          <el-select v-model="temp.position_id" placeholder="选择合作伙伴">
+            <el-option v-for="item in positionsList" :key="item.id" :label="item.position + '/' + item.tempr" :value="item.id"></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="所属项目">
+          <el-select v-model="temp.project_id" placeholder="选择合作伙伴">
+            <el-option v-for="item in projectsList" :key="item.id" :label="item.name" :value="item.id"></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="技术路线">
+          <el-select v-model="temp.roadmap_id" placeholder="选择合作伙伴">
+            <el-option v-for="item in roadmapsList" :key="item.id" :label="item.name" :value="item.id"></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="备注">
+          <el-input type="textarea" v-model="temp.remark"></el-input>
+        </el-form-item>
+
       </el-form>
 
       <div slot="footer" class="dialog-footer">
@@ -111,11 +149,23 @@
     </el-dialog>
 
     <!-- TODO 次级页面都添加dialog弹出框 -->
+    <el-dialog title="合作单位批次信息" :visible.sync="dialogSamplesVisible" size="small">
+       <el-table :data="samplesData" border fit highlight-current-row style="width: 100%">
+          <el-table-column prop="pmid" label="谱元编号"> </el-table-column>
+          <el-table-column prop="ori_num" label="原始编号"> </el-table-column>
+          <el-table-column label="样品量">
+            <template scope="scope">
+              <span>{{ scope.row.amount + '/' + scope.row.type }}</span>
+            </template>
+          </el-table-column>
+      </el-table>
+    </el-dialog >
   </div>
 </template>
 
 <script>
-import { fetchList } from '@/api/batch_table'
+import { fetchList, createItem, updateItem, deleteItem, fetchBatchSamples } from '@/api/batches'
+import { mapGetters, mapActions } from 'vuex'
 export default {
   data () {
     return {
@@ -130,20 +180,43 @@ export default {
       listLoading: true,
       temp: {
         id: undefined,
-        name: ''
+        agency_id: undefined,
+        contact_id: undefined,
+        deliver_time: '',
+        arrive_time: '',
+        express_num: '',
+        store_time: '',
+        position_id: undefined,
+        project_id: undefined,
+        roadmap_id: undefined,
+        remark: ''
       },
       textMap: {
         create: '创建',
         update: '更新'
       },
       dialogStatus: '',
-      dialogFormVisible: false
+      dialogFormVisible: false,
+      dialogSamplesVisible: false,
+      samplesData: []
     }
   },
+  computed: {
+    ...mapGetters(['agenciesList', 'contactsList', 'projectsList', 'roadmapsList', 'positionsList'])
+  },
   created () {
+    this.prepareList()
     this.getList()
   },
   methods: {
+    ...mapActions(['getAgenciesList', 'getContactsList', 'getProjectsList', 'getRoadmapsList', 'getPositionsList']),
+    prepareList () {
+      this.getAgenciesList()
+      this.getContactsList()
+      this.getProjectsList()
+      this.getRoadmapsList()
+      this.getPositionsList()
+    },
     getList () {
       this.listLoading = true
       fetchList(this.listQuery).then(response => {
@@ -153,6 +226,9 @@ export default {
         this.listLoading = false
       })
     },
+    clearContact () {
+      this.temp.contact_id = undefined
+    },
     handleFilter () {},
     handleCreate () {
       this.dialogStatus = 'create'
@@ -161,8 +237,37 @@ export default {
     handleDownload () {},
     handleSizeChange () {},
     handleCurrentChange () {},
-    create () {},
-    update () {}
+    create () {
+      createItem(this.temp).then(res => {
+        this.dialogFormVisible = false
+        this.getList()
+      })
+    },
+    showEdit (row) {
+      this.dialogStatus = 'update'
+      this.temp = row
+      this.dialogFormVisible = true
+    },
+    update () {
+      let id = this.temp.id
+      let data = this.temp
+      updateItem(id, data).then(res => {
+        this.dialogFormVisible = false
+        this.getList()
+      })
+    },
+    remove (id) {
+      deleteItem(id).then(res => {
+        this.getList()
+      })
+    },
+    handleFetchSamples (row) {
+      let id = row.id
+      fetchBatchSamples(id).then(res => {
+        this.dialogSamplesVisible = true
+        this.samplesData = res.data.data
+      })
+    }
   }
 }
 </script>

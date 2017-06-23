@@ -77,11 +77,42 @@
     <el-dialog
     :title="textMap[dialogStatus]" :visible.sync="dialogFormVisible">
       <el-form class="smapll-space" :model="temp" label-position="left" label-width="70px" style="width:400px; margin-left: 50px">
-        <el-form-item label="名称">
-          <el-input v-model="temp.name"></el-input>
+        <el-form-item label="所属批次">
+          <el-input v-model="temp.batch_id"></el-input>
+        </el-form-item>
+        <el-form-item label="客户">
+          <el-input v-model="temp.client_id"></el-input>
+        </el-form-item>
+        <el-form-item label="谱元ID">
+          <el-input v-model="temp.pmid"></el-input>
+        </el-form-item>
+        <el-form-item label="原始ID">
+          <el-input v-model="temp.ori_num"></el-input>
+        </el-form-item>
+        <el-form-item label="样品量">
+          <el-input placeholder="选择类型" v-model="temp.amount">
+            <el-select v-model="temp.type" slot="prepend" placeholder="选择">
+              <el-option label="重量" value="1"></el-option>
+              <el-option label="体积" value="2"></el-option>
+            </el-select>
+          </el-input>
+        </el-form-item>
+        <el-form-item label="测序方法" v-show="temp.id">
+          <el-input v-model="temp.sequence_method"></el-input>
+        </el-form-item>
+        <el-form-item label="引物" v-show="temp.id">
+          <el-input v-model="temp.primer"></el-input>
+        </el-form-item>
+        <el-form-item label="测序仪" v-show="temp.id">
+          <el-input v-model="temp.sequencer"></el-input>
+        </el-form-item>
+        <el-form-item label="文库编号" v-show="temp.id">
+          <el-input v-model="temp.library_id"></el-input>
+        </el-form-item>
+        <el-form-item label="备注">
+          <el-input type="textarea" v-model="temp.remark"></el-input>
         </el-form-item>
       </el-form>
-
       <div slot="footer" class="dialog-footer">
         <el-button @click="dialogFormVisible = false">取消</el-button>
         <el-button v-if="dialogStatus === 'create'" type="primary" @click="create">确定</el-button>
@@ -92,7 +123,7 @@
 </template>
 
 <script>
-import { fetchList } from '@/api/sample_table'
+import { fetchList, createItem, updateItem, deleteItem, fetchSampleResults } from '@/api/samples'
 export default {
   data () {
     return {
@@ -107,7 +138,17 @@ export default {
       listLoading: true,
       temp: {
         id: undefined,
-        name: ''
+        batch_id: 0,
+        client_id: 0,
+        pmid: '',
+        ori_num: '',
+        amount: 0,
+        type: 1,
+        sequence_method: 0,
+        primer: 0,
+        sequencer: 0,
+        library_id: 0,
+        remark: ''
       },
       textMap: {
         create: '创建',
@@ -137,8 +178,37 @@ export default {
     handleDownload () {},
     handleSizeChange () {},
     handleCurrentChange () {},
-    create () {},
-    update () {}
+    create () {
+      createItem(this.temp).then(res => {
+        this.dialogFormVisible = false
+        this.getList()
+      })
+    },
+    showEdit (row) {
+      this.dialogStatus = 'update'
+      this.temp = row
+      this.dialogFormVisible = true
+    },
+    update () {
+      let id = this.temp.id
+      let data = this.temp
+      updateItem(id, data).then(res => {
+        this.dialogFormVisible = false
+        this.getList()
+      })
+    },
+    remove (id) {
+      deleteItem(id).then(res => {
+        this.getList()
+      })
+    },
+    handleFetchResults (row) {
+      let id = row.id
+      fetchSampleResults(id).then(res => {
+        this.dialogSamplesVisible = true
+        this.samplesData = res.data.data
+      })
+    }
   }
 }
 </script>

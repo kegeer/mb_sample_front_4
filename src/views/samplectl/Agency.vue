@@ -8,14 +8,9 @@
     </div>
 
     <el-table :key="tableKey" :data="list" border highlight-current-row style="width: 100%">
-      <el-table-column   label="序号">
-        <template align="center" width="65" scope="scope">
-          <span>{{ scope.row.id }}</span>
-        </template>
-      </el-table-column>
       <el-table-column label="机构名">
         <template align="center" width="65" scope="scope">
-          <span>{{ scope.row.name }}</span>
+          <span class="link-type" @click="showEdit(scope.row)">{{ scope.row.name }}</span>
         </template>
       </el-table-column>
       <el-table-column label="地址">
@@ -23,10 +18,21 @@
           <span>{{ scope.row.address }}</span>
         </template>
       </el-table-column>
+      <el-table-column label="来样机构联系人">
+        <template align="center" width="65" scope="scope">
+          <span class="link-type" @click="handleFetchContacts(scope.row.id)">查看</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="来样批次">
+        <template align="center" width="65" scope="scope">
+          <span class="link-type" @click="handleFetchBatches(scope.row.id)">查看</span>
+        </template>
+      </el-table-column>
 
       <el-table-column align="center" label="操作" width="150">
         <template scope="scope">
-          <el-button size="small" type="success" @click="handleModifyStatus(scope.row, 'close')">关闭</el-button>
+          <el-button size="small" type="success" @click="showEdit(scope.row)">修改</el-button>
+          <el-button size="small" type="danger" @click="remove(scope.row.id)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -46,22 +52,66 @@
     <el-dialog
     :title="textMap[dialogStatus]" :visible.sync="dialogFormVisible">
       <el-form class="smapll-space" :model="temp" label-position="left" label-width="70px" style="width:400px; margin-left: 50px">
-        <el-form-item label="名称">
+        <el-form-item label="单位名">
           <el-input v-model="temp.name"></el-input>
+        </el-form-item>
+        <el-form-item label="地址">
+          <el-input v-model="temp.address"></el-input>
         </el-form-item>
       </el-form>
 
       <div slot="footer" class="dialog-footer">
         <el-button @click="dialogFormVisible = false">取消</el-button>
-        <el-button v-if="dialogStatus === 'create'" type="primary" @click="create">确定</el-button>
-        <el-button v-else type="primary" @click="update">确定</el-button>
+        <el-button v-if="dialogStatus === 'create'" type="primary" @click="create">创建</el-button>
+        <el-button v-else type="primary" @click="update">更新</el-button>
       </div>
     </el-dialog>
+
+    <el-dialog title="合作单位联系人" :visible.sync="dialogContactsVisible" size="small">
+      <el-table :data="contactsData" border fit highlight-current-row style="width:100%">
+        <el-table-column label="姓名">
+          <template scope="scope">
+            <el-input v-show="scope.row.edit" size="samll" v-model="scope.row.name"></el-input>
+            <span v-show="!scope.row.edit">{{ scope.row.name }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="电话">
+          <template scope="scope">
+            <el-input v-show="scope.row.edit" size="samll" v-model="scope.row.phone"></el-input>
+            <span v-show="!scope.row.edit">{{ scope.row.phone }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="邮箱">
+          <template scope="scope">
+            <el-input v-show="scope.row.edit" size="samll" v-model="scope.row.email"></el-input>
+            <span v-show="!scope.row.edit">{{ scope.row.email }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column align="center" label="编辑" width="120">
+          <template scope="scope">
+            <el-button v-show="!scope.row.edit" type="primary" @click="scope.row.edit = true" size="small" icon="edit">编辑</el-button>
+            <el-button v-show="scope.row.edit" type="success" @click="updateContact(scope)" size="small" icon="check">完成</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+    </el-dialog>
+    <el-dialog title="合作单位批次信息" :visible.sync="dialogBatchesVisible" size="small">
+       <el-table :data="batchesData" border fit highlight-current-row style="width: 100%">
+          <el-table-column prop="type" label="样本类型"> </el-table-column>
+          <el-table-column prop="status" label="到样状态"> </el-table-column>
+          <el-table-column prop="character" label="状态特征"> </el-table-column>
+          <el-table-column prop="deliver_time" label="寄送时间"> </el-table-column>
+          <el-table-column prop="arrive_time" label="到样时间"> </el-table-column>
+          <el-table-column prop="express_num" label="快递单号"> </el-table-column>
+          <el-table-column prop="store_time" label="入库时间"> </el-table-column>
+      </el-table>
+    </el-dialog >
   </div>
 </template>
 
 <script>
-import { fetchList } from '@/api/agency_table'
+import { fetchList, createItem, updateItem, deleteItem, fetchAgencyBatches } from '@/api/agencies'
+import { fetchAgencyContacts, updateItem as updateContact } from '@/api/contacts'
 
 export default {
   data () {
@@ -77,14 +127,19 @@ export default {
       listLoading: true,
       temp: {
         id: undefined,
-        name: ''
+        name: '',
+        address: ''
       },
       textMap: {
         create: '创建',
         update: '更新'
       },
       dialogStatus: '',
-      dialogFormVisible: false
+      dialogFormVisible: false,
+      dialogContactsVisible: false,
+      contactsData: [],
+      dialogBatchesVisible: false,
+      batchesData: []
     }
   },
   created () {
@@ -94,9 +149,12 @@ export default {
     getList () {
       this.listLoading = true
       fetchList(this.listQuery).then(response => {
-        console.log(response.data)
-        this.list = response.data.items
-        this.total = response.data.total
+        // console.log(response.data)
+        this.list = response.data.data.map(v => {
+          v.edit = false
+          return v
+        })
+        // this.total = response.data.total
         this.listLoading = false
       })
     },
@@ -108,8 +166,60 @@ export default {
     handleDownload () {},
     handleSizeChange () {},
     handleCurrentChange () {},
-    create () {},
-    update () {}
+    create () {
+      createItem(this.temp).then(res => {
+        this.dialogFormVisible = false
+        this.getList()
+      })
+    },
+    showEdit (row) {
+      this.dialogStatus = 'update'
+      this.temp = row
+      this.dialogFormVisible = true
+    },
+    update () {
+      let id = this.temp.id
+      let data = this.temp
+      updateItem(id, data).then(res => {
+        this.dialogFormVisible = false
+        this.getList()
+      })
+    },
+    remove (id) {
+      deleteItem(id).then(res => {
+        this.getList()
+      })
+    },
+    handleFetchContacts (id) {
+      this.dialogContactsVisible = true
+      fetchAgencyContacts(id).then(res => {
+        this.contactsData = res.data.data.map(v => {
+          v.edit = false
+          return v
+        })
+      })
+    },
+    updateContact (scope) {
+      const id = scope.row.id
+      const data = this.contactsData[scope.$index]
+      updateContact(id, data).then(res => {
+        scope.row.edit = false
+        this.$notify({
+          type: 'success',
+          title: '成功',
+          message: '更新成功'
+        })
+      })
+    },
+    handleFetchBatches (id) {
+      this.dialogBatchesVisible = true
+      fetchAgencyBatches(id).then(res => {
+        this.batchesData = res.data.data.map(v => {
+          v.edit = false
+          return v
+        })
+      })
+    }
   }
 }
 </script>
