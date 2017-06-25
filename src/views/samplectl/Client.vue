@@ -33,14 +33,14 @@
       </el-table-column>
 
       <el-table-column label="体重">
-        <template align="center" width="65" scope="scope" placeholder="输入体重"> 
+        <template align="center" width="65" scope="scope" placeholder="输入体重">
           <span>{{ scope.row.weight }}</span>
         </template>
       </el-table-column>
 
       <el-table-column label="样本">
         <template align="center" width="65" scope="scope">
-          <span class="link-type" @click="handleFetchSamples(scope.row.samples)">{{ scope.row.samples }}</span>
+          <span class="link-type" @click="handleFetchSamples(scope.row.samples)">擦看</span>
         </template>
       </el-table-column>
 
@@ -83,34 +83,37 @@
         <el-form-item label="体重">
           <el-input v-model="temp.weight"></el-input>
         </el-form-item>
-        <br>
-        <el-form-item label="电话号码">
-          <el-input v-model="temp.extra.phone_num"></el-input>
+        <el-form-item label="录入额外信息">
+          <el-switch on-text="是" off-text="否" v-model="showExtraForm"></el-switch>
         </el-form-item>
-        <el-form-item label="是否吸烟">
-          <el-radio class="radio" v-model="temp.extra.smoking" label="1">是</el-radio>
-          <el-radio class="radio" v-model="temp.extra.smoking" label="0">否</el-radio>
-        </el-form-item>
-        <el-form-item label="是否饮酒">
+          <el-form-item label="电话号码" v-show="showExtraForm">
+            <el-input v-model="temp.extra.phone_num"></el-input>
+          </el-form-item>
+          <el-form-item label="是否吸烟" v-show="showExtraForm">
+            <el-radio class="radio" v-model="temp.extra.smoking" label="1">是</el-radio>
+            <el-radio class="radio" v-model="temp.extra.smoking" label="0">否</el-radio>
+          </el-form-item>
+
+        <el-form-item label="是否饮酒" v-show="showExtraForm">
           <el-radio class="radio" v-model="temp.extra.drinking" label="1">是</el-radio>
           <el-radio class="radio" v-model="temp.extra.drinking" label="0">否</el-radio>
         </el-form-item>
-        <el-form-item label="甘油三酯">
+        <el-form-item label="甘油三酯" v-show="showExtraForm">
           <el-input v-model="temp.extra.triglyceride"></el-input>
         </el-form-item>
-        <el-form-item label="胆固醇">
+        <el-form-item label="胆固醇" v-show="showExtraForm">
           <el-input v-model="temp.extra.cholesterol"></el-input>
         </el-form-item>
-        <el-form-item label="高密度脂蛋白">
+        <el-form-item label="高密度脂蛋白" v-show="showExtraForm">
           <el-input v-model="temp.extra.h_lipoprotein"></el-input>
         </el-form-item>
-        <el-form-item label="低密度脂蛋白">
+        <el-form-item label="低密度脂蛋白" v-show="showExtraForm">
           <el-input v-model="temp.extra.l_lipoprotein"></el-input>
         </el-form-item>
-        <el-form-item label="FBG">
+        <el-form-item label="FBG" v-show="showExtraForm">
           <el-input v-model="temp.extra.fbg"></el-input>
         </el-form-item>
-        <el-form-item label="排便">
+        <el-form-item label="排便" v-show="showExtraForm">
           <el-select v-model="temp.extra.defecate" placaholder="每日排便次数">
             <el-option key="0" label="一日一次" value="0"></el-option>
             <el-option key="1" label="一日二次" value="1"></el-option>
@@ -118,13 +121,13 @@
             <el-option key="3" label="一日次次" value="3"></el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="疾病史">
+        <el-form-item label="疾病史" v-show="showExtraForm">
           <el-input v-model="temp.extra.medical_history"></el-input>
         </el-form-item>
-        <el-form-item label="家族遗传病史">
+        <el-form-item label="家族遗传病史" v-show="showExtraForm">
           <el-input v-model="temp.extra.family_history"></el-input>
         </el-form-item>
-        <el-form-item label="用药史">
+        <el-form-item label="用药史" v-show="showExtraForm">
           <el-input v-model="temp.extra.medicine"></el-input>
         </el-form-item>
         <el-form-item label="备注">
@@ -162,6 +165,7 @@ export default {
         limit: 20
       },
       listLoading: true,
+      showExtraForm: false,
       temp: {
         id: undefined,
         name: '',
@@ -171,13 +175,13 @@ export default {
         weight: 0,
         extra: {
           phone_num: '',
-          smoking: 0,
-          drinking: 0,
+          smoking: null,
+          drinking: null,
           triglyceride: '',
           cholesterol: '',
           h_lipoprotein: '',
           fbg: '',
-          defecate: 0,
+          defecate: null,
           medical_history: '',
           family_history: '',
           medicine: '',

@@ -3,6 +3,8 @@ import { fetchList as fetchContactsList } from '@/api/contacts'
 import { fetchList as fetchProjectsList } from '@/api/projects'
 import { fetchList as fetchRoadmapsList } from '@/api/roadmaps'
 import { fetchList as fetchPositionsList } from '@/api/positions'
+import { fetchList as fetchBatchesList } from '@/api/batches'
+import { fetchList as fetchClientsList } from '@/api/clients'
 
 const resources = {
   state: {
@@ -10,7 +12,9 @@ const resources = {
     contactsList: [],
     projectsList: [],
     roadmapsList: [],
-    positionsList: []
+    positionsList: [],
+    batchesList: [],
+    clientsList: []
   },
   mutations: {
     SET_AGENCIES (state, data) {
@@ -27,6 +31,12 @@ const resources = {
     },
     SET_POSITIONS (state, data) {
       state.positionsList = data
+    },
+    SET_BATCHE (state, data) {
+      state.batchesList = data
+    },
+    SET_CLIENTS (state, data) {
+      state.clientsList = data
     }
   },
   actions: {
@@ -67,6 +77,18 @@ const resources = {
       fetchPositionsList().then(res => {
         const data = res.data.data
         commit('SET_POSITIONS', data)
+      })
+    },
+    getBatchesList ({ commit }) {
+      fetchBatchesList().then(res => {
+        const data = res.data.data
+        commit('SET_BATCHES', data)
+      })
+    },
+    getClientsList ({ commit }) {
+      fetchClientsList().then(res => {
+        const data = res.data.data
+        commit('SET_CLIENTS', data)
       })
     }
   }

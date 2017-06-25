@@ -3,26 +3,10 @@
     <div class="filter-container">
       <el-input @keyup.enter.native="handleFilter" class="filter-item" v-model="listQuery.name" placeholder="合作单位名称" style="width:180px"></el-input>
       <el-button class="filter-item" @click="handleFilter" type="primary" icon="search">搜索</el-button>
-      <el-button class="filter-item" @click="handleCreate" type="primary" style="margin-left: 10px" icon="edit">添加</el-button>
+      <el-button class="filter-item" @click="handleCreate" type="primary" style="margin-left: 10px" icon="edit">添加项目</el-button>
       <el-button class="filter-item" @click="handleDownload" type="primary" icon="document">导出</el-button>
     </div>
     <el-table :key="tableKey" :data="list" border highlight-current-row style="width: 100%">
-      <el-table-column type="expand">
-        <template scope="scope">
-          <p>总样品数: {{ scope.row.total_samples }}</p>
-          <p>样品来源: {{ scope.row.sample_source }}</p>
-          <p>样品类型: {{ scope.row.samples_type }}</p>
-          <p>本项目样品识别码: {{ scope.row.sample_code }}</p>
-          <p>已完成样品数: {{ scope.row.completed_samples }}</p>
-          <p>未完成样品数: {{ scope.row.in_progress_sample }}</p>
-        </template>
-      </el-table-column>
-
-      <el-table-column label="序号">
-        <template align="center" width="65" scope="scope">
-          <span>{{ scope.row.id }}</span>
-        </template>
-      </el-table-column>
 
       <el-table-column label="子项目名称">
         <template align="center" width="65" scope="scope">
@@ -30,57 +14,28 @@
         </template>
       </el-table-column>
 
-      <el-table-column label="所属项目">
-        <template align="center" width="65" scope="scope">
-          <span>{{ scope.row.project_id }}</span>
-        </template>
-      </el-table-column>
-
-      <el-table-column label="状态">
-        <template align="center" width="65" scope="scope">
-          <span>{{ scope.row.status }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="密级">
-        <template align="center" width="65" scope="scope">
-          <span>{{ scope.row.level }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="优先级">
-        <template align="center" width="65" scope="scope">
-          <span>{{ scope.row.privilege }}</span>
-        </template>
-      </el-table-column>
       <el-table-column label="项目简要概述">
         <template align="center" width="65" scope="scope">
           <span>{{ scope.row.description }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="项目负责人">
+
+      <el-table-column label="项目主管">
         <template align="center" width="65" scope="scope">
-          <span>{{ scope.row.p_manager }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="信息负责人">
-        <template align="center" width="65" scope="scope">
-          <span>{{ scope.row.info_manager }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="项目管理">
-        <template align="center" width="65" scope="scope">
-          <span>{{ scope.row.manage }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="进展与问题	">
-        <template align="center" width="65" scope="scope">
-          <span class="link-type" @handleProjectProblems(scope.row.problems)>{{ scope.row.problems }}</span>
+          <span>{{ scope.row.manager }}</span>
         </template>
       </el-table-column>
 
+      <el-table-column label="所有子项目">
+        <template align="center" width="65" scope="scope">
+          <span class="link-type" @click="handleFecthSubprojects">查看</span>
+        </template>
+      </el-table-column>
 
       <el-table-column align="center" label="操作" width="150">
         <template scope="scope">
-          <el-button size="small" type="success" @click="handleModifyStatus(scope.row, 'close')">关闭</el-button>
+          <el-button size="small" type="default" @click="showEdit(scope.row)">修改</el-button>
+          <el-button size="small" type="danger" @click="remove(scope.row.id)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -103,6 +58,13 @@
         <el-form-item label="名称">
           <el-input v-model="temp.name"></el-input>
         </el-form-item>
+        <el-form-item label="项目简述">
+          <el-input type="textarea" v-model="temp.description"></el-input>
+        </el-form-item>
+        <el-form-item label="项目主管">
+          <el-input v-model="temp.manager"></el-input>
+        </el-form-item>
+
       </el-form>
 
       <div slot="footer" class="dialog-footer">
@@ -111,11 +73,22 @@
         <el-button v-else type="primary" @click="update">确定</el-button>
       </div>
     </el-dialog>
+
+    <el-dialog title="该项目所有子项目" :visible.sync="dialogSubprojectsVisible" size="small">
+      <el-table :data="subprojectsData" border fit highlight-current-row style="width: 100%">
+         <el-table-column prop="name" label="子项目名称"> </el-table-column>
+         <el-table-column prop="status" label="状态"> </el-table-column>
+         <el-table-column prop="level" label="密级"> </el-table-column>
+         <el-table-column prop="privilege" label="优先级"> </el-table-column>
+         <el-table-column prop="p_manager" label="项目负责人"> </el-table-column>
+         <el-table-column prop="info_manager" label="信息负责人"> </el-table-column>
+     </el-table>
+    </el-dialog>
   </div>
 </template>
 
 <script>
-import { fetchList } from '@/api/sub_project_table'
+import { fetchList, createItem, updateItem, deleteItem, fetchProjectSubprojects } from '@/api/projects'
 export default {
   data () {
     return {
@@ -130,14 +103,17 @@ export default {
       listLoading: true,
       temp: {
         id: undefined,
-        name: ''
+        name: '',
+        description: '',
+        manager: ''
       },
       textMap: {
         create: '创建',
         update: '更新'
       },
       dialogStatus: '',
-      dialogFormVisible: false
+      dialogFormVisible: false,
+      dialogSubprojectsVisible: false
     }
   },
   created () {
@@ -161,9 +137,36 @@ export default {
     handleDownload () {},
     handleSizeChange () {},
     handleCurrentChange () {},
-    create () {},
-    update () {},
-    handleProjectProblems (item) {}
+    create () {
+      createItem(this.temp).then(res => {
+        this.dialogFormVisible = false
+        this.getList()
+      })
+    },
+    showEdit (row) {
+      this.dialogStatus = 'update'
+      this.temp = row
+      this.dialogFormVisible = true
+    },
+    update () {
+      let id = this.temp.id
+      let data = this.temp
+      updateItem(id, data).then(res => {
+        this.dialogFormVisible = false
+        this.getList()
+      })
+    },
+    remove (id) {
+      deleteItem(id).then(res => {
+        this.getList()
+      })
+    },
+    handleFecthSubprojects (id) {
+      this.dialogSubprojectsVisible = true
+      fetchProjectSubprojects(id).then(res => {
+        this.contactData = res.data.data
+      })
+    }
   }
 }
 </script>

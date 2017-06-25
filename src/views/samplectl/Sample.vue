@@ -76,12 +76,16 @@
 
     <el-dialog
     :title="textMap[dialogStatus]" :visible.sync="dialogFormVisible">
-      <el-form class="smapll-space" :model="temp" label-position="left" label-width="70px" style="width:400px; margin-left: 50px">
+      <el-form class="smapll-space" :model="temp" label-position="left" label-width="120px" style="width:600px; margin-left: 50px">
         <el-form-item label="所属批次">
-          <el-input v-model="temp.batch_id"></el-input>
+          <el-select v-model="temp.batch_id" placeholder="选择来样批次">
+            <el-option v-for="item in batchesList" :key="item.id" :label="item.name" :value="item.id"></el-option>
+          </el-select>
         </el-form-item>
         <el-form-item label="客户">
-          <el-input v-model="temp.client_id"></el-input>
+          <el-select v-model="temp.client_id" placeholder="选择所属客户">
+            <el-option v-for="item in clientsList" :key="item.id" :label="item.name" :value="item.id"></el-option>
+          </el-select>
         </el-form-item>
         <el-form-item label="谱元ID">
           <el-input v-model="temp.pmid"></el-input>
@@ -91,7 +95,7 @@
         </el-form-item>
         <el-form-item label="样品量">
           <el-input placeholder="选择类型" v-model="temp.amount">
-            <el-select v-model="temp.type" slot="prepend" placeholder="选择">
+            <el-select v-model="temp.type_choice" slot="prepend" placeholder="选择">
               <el-option label="重量" value="1"></el-option>
               <el-option label="体积" value="2"></el-option>
             </el-select>
@@ -138,12 +142,12 @@ export default {
       listLoading: true,
       temp: {
         id: undefined,
-        batch_id: 0,
-        client_id: 0,
+        batch_id: null,
+        client_id: null,
         pmid: '',
         ori_num: '',
         amount: 0,
-        type: 1,
+        type_choice: '',
         sequence_method: 0,
         primer: 0,
         sequencer: 0,
@@ -214,4 +218,8 @@ export default {
 </script>
 
 <style lang="css">
+.el-select .el-input {
+    width: 110px;
+  }
+
 </style>

@@ -23,11 +23,15 @@ const Client = r => require.ensure([], () => r(require('../views/samplectl/Clien
 
 // 项目管理
 const Project = r => require.ensure([], () => r(require('../views/projectctl/Project')), 'projectctl')
+const Subproject = r => require.ensure([], () => r(require('../views/projectctl/Subproject')), 'projectctl')
 const Contract = r => require.ensure([], () => r(require('../views/projectctl/Contract')), 'projectctl')
 
 // 实验管理
 const Experiment = r => require.ensure([], () => r(require('../views/expctl/Experiment')), 'expctl')
-const ExperimentData = r => require.ensure([], () => r(require('../views/expctl/ExperimentData')), 'expctl')
+// const ExperimentData = r => require.ensure([], () => r(require('../views/expctl/ExperimentData')), 'expctl')
+
+// 实验数据管理
+const ExperimentLibrary = r => require.ensure([], () => r(require('../views/expctl/procedures/Library')), 'expctl')
 
 // 数据分析
 const Job = r => require.ensure([], () => r(require('../views/datactl/Job')), 'datactl')
@@ -35,8 +39,8 @@ const Manage = r => require.ensure([], () => r(require('../views/datactl/Manage'
 
 // 報告管理
 const Info = r => require.ensure([], () => r(require('../views/reportctl/Info')), 'reportctl')
-const Template = r => require.ensure([], () => r(require('../views/reportctl/Template')), 'reportctl')
 const Designer = r => require.ensure([], () => r(require('../views/reportctl/Designer')), 'reportctl')
+const Category = r => require.ensure([], () => r(require('../views/reportctl/Category')), 'reportctl')
 const Report = r => require.ensure([], () => r(require('../views/reportctl/Report')), 'reportctl')
 
 export const constantRouterMap = [
@@ -124,7 +128,12 @@ export const asyncRouterMap = [
       {
         path: 'projects',
         component: Project,
-        name: '项目库'
+        name: '总项目库'
+      },
+      {
+        path: 'subprojects',
+        component: Subproject,
+        name: '子项目管理'
       },
       {
         path: 'contracts',
@@ -143,14 +152,14 @@ export const asyncRouterMap = [
       {
         path: 'experiments',
         component: Experiment,
-        name: '实验队列'
+        name: '实验统计'
       },
       // 数据录入需要思考,采取什么样的形式进行录入
       // 管理员可以动态的修改需要录入数据的格式
       {
-        path: 'data',
-        component: ExperimentData,
-        name: '数据录入'
+        path: 'library',
+        component: ExperimentLibrary,
+        name: '文库数据'
       }
     ]
   },
@@ -186,9 +195,9 @@ export const asyncRouterMap = [
         name: '数据指标'
       },
       {
-        path: 'templates',
-        component: Template,
-        name: '报告模板'
+        path: 'categories',
+        component: Category,
+        name: '数据分类'
       },
       {
         path: 'designer',

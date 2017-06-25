@@ -55,7 +55,7 @@
 </template>
 
 <script>
-import { fetchList, createItem, updateItem, deleteItem } from '@/api/templates'
+import { fetchList, createItem, updateItem, deleteItem } from '@/api/categories'
 export default {
   data () {
     return {

@@ -1,7 +1,5 @@
 <template lang="html">
-  <div>
-    <h1>模板设计</h1>
-  </div>
+
 </template>
 
 <script>

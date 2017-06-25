@@ -30,3 +30,10 @@ export function deleteItem (id) {
     method: 'delete'
   })
 }
+
+export function fetchProjectSubprojects (id) {
+  return fetch({
+    url: `/projects/${id}/subprojects`,
+    method: 'get'
+  })
+}

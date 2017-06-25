@@ -30,3 +30,10 @@ export function deleteItem (id) {
     method: 'delete'
   })
 }
+
+export function fetchSampleResults (id) {
+  return fetch({
+    url: `/samples/${id}/results`,
+    method: 'get'
+  })
+}
