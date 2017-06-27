@@ -15,8 +15,8 @@
 
       <el-table-column align="center" label="谱元ID">
         <template scope="scope">
-          <span class="link-type" @click="handleUpdate(scope.row)">{{ scope.row.pmid }}</span>
-          <el-tag>{{ scope.row.type | typeFilter }}</el-tag>
+          <span class="link-type" @click="showEdit(scope.row)">{{ scope.row.pmid }}</span>
+          <el-tag>{{ scope.row.type }}</el-tag>
         </template>
       </el-table-column>
 
@@ -56,7 +56,7 @@
 
       <el-table-column align="center" label="操作" width="150">
         <template scope="scope">
-          <el-button size="small" type="warning" @click="handleUpdate(scope.row)">修改</el-button>
+          <el-button size="small" type="warning" @click="showEdit(scope.row)">修改</el-button>
           <el-button size="small" type="danger" @click="handleDelete(scope.row)">删除</el-button>
         </template>
       </el-table-column>
@@ -75,11 +75,11 @@
     </div>
 
     <el-dialog
-    :title="textMap[dialogStatus]" :visible.sync="dialogFormVisible">
+    :title="textMap[dialogStatus]" :visible.sync="dialogFormVisible"  @close="resetTemp">
       <el-form class="smapll-space" :model="temp" label-position="left" label-width="120px" style="width:600px; margin-left: 50px">
         <el-form-item label="所属批次">
           <el-select v-model="temp.batch_id" placeholder="选择来样批次">
-            <el-option v-for="item in batchesList" :key="item.id" :label="item.name" :value="item.id"></el-option>
+            <el-option v-for="item in batchesList" :key="item.id" :label="item.deliver_time" :value="item.id"></el-option>
           </el-select>
         </el-form-item>
         <el-form-item label="客户">
@@ -128,6 +128,8 @@
 
 <script>
 import { fetchList, createItem, updateItem, deleteItem, fetchSampleResults } from '@/api/samples'
+import { mapGetters, mapActions } from 'vuex'
+
 export default {
   data () {
     return {
@@ -162,21 +164,32 @@ export default {
       dialogFormVisible: false
     }
   },
+  computed: {
+    ...mapGetters(['batchesList', 'clientsList'])
+  },
   created () {
     this.getList()
   },
   methods: {
+    ...mapActions(['getBatchesList', 'getClientsList']),
+    prepareList () {
+      this.getBatchesList()
+      this.getClientsList()
+    },
     getList () {
       this.listLoading = true
-      fetchList(this.listQuery).then(res => {
-        this.list = res.data.items
-        this.total = res.data.total
+      fetchList(this.listQuery).then(response => {
+        this.list = response.data.data.map(v => {
+          v.edit = false
+          return v
+        })
         this.listLoading = false
       })
     },
     handleFilter () {},
     handleCreate () {
       this.dialogStatus = 'create'
+      this.prepareList()
       this.dialogFormVisible = true
     },
     handleDownload () {},
@@ -190,6 +203,7 @@ export default {
     },
     showEdit (row) {
       this.dialogStatus = 'update'
+      this.prepareList()
       this.temp = row
       this.dialogFormVisible = true
     },
@@ -212,6 +226,22 @@ export default {
         this.dialogSamplesVisible = true
         this.samplesData = res.data.data
       })
+    },
+    resetTemp () {
+      this.temp = {
+        id: undefined,
+        batch_id: null,
+        client_id: null,
+        pmid: '',
+        ori_num: '',
+        amount: 0,
+        type_choice: '',
+        sequence_method: 0,
+        primer: 0,
+        sequencer: 0,
+        library_id: 0,
+        remark: ''
+      }
     }
   }
 }

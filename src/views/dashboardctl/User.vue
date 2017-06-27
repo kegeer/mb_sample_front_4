@@ -7,34 +7,14 @@
       <el-button class="filter-item" @click="handleDownload" type="primary" icon="document">导出</el-button>
     </div>
     <el-table :key="tableKey" :data="list" border highlight-current-row style="width: 100%">
-      <el-table-column label="生成时间">
+      <el-table-column label="用户邮箱">
         <template align="center" width="65" scope="scope">
-          <span>{{ scope.row.date }}</span>
+          <span>{{ scope.row.email }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="样品谱元ID">
+      <el-table-column label="角色">
         <template align="center" width="65" scope="scope">
-          <span>{{ scope.row.sample_id }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="报告状态">
-        <template align="center" width="65" scope="scope">
-          <span>{{ scope.row.status }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="审核员">
-        <template align="center" width="65" scope="scope">
-          <span>{{ scope.row.auditor }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="审核时间">
-        <template align="center" width="65" scope="scope">
-          <span>{{ scope.row.auditor_date }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="预览并审核">
-        <template align="center" width="65" scope="scope">
-          <span class="link-type" @click="handlePreview(scope.row)">打开</span>
+          <span>{{ scope.row.roles }}</span>
         </template>
       </el-table-column>
 
@@ -44,6 +24,7 @@
         </template>
       </el-table-column>
     </el-table>
+
     <div v-show="!listLoading" class="pagintion-container">
       <el-pagination
         @size-change="handleSizeChange"
@@ -55,11 +36,20 @@
         :total="total"
       ></el-pagination>
     </div>
+
     <el-dialog
     :title="textMap[dialogStatus]" :visible.sync="dialogFormVisible">
       <el-form class="smapll-space" :model="temp" label-position="left" label-width="70px" style="width:400px; margin-left: 50px">
         <el-form-item label="名称">
-          <el-input v-model="temp.name"></el-input>
+          <el-input v-model="temp.email"></el-input>
+        </el-form-item>
+        <el-form-item label="密码">
+          <el-input v-model="temp.password"></el-input>
+        </el-form-item>
+        <el-form-item label="角色">
+          <el-checkbox-group v-model="temp.roles" >
+            <el-checkbox v-for="item in rolesList" :label="item" :key="item.id">{{ item.name }}</el-checkbox>
+          </el-checkbox-group>
         </el-form-item>
       </el-form>
 
@@ -73,17 +63,14 @@
       <el-table :data="subprojectsData" border fit highlight-current-row style="width: 100%">
          <el-table-column prop="name" label="子项目名称"> </el-table-column>
      </el-table>
-    </el-dialog>
-    <el-dialog title="预览并审核报告" :visible.sync="dialogPreviewVisible" size="small">
-      <el-table :data="reportContents" border fit highlight-current-row style="width: 100%">
-         <el-table-column prop="name" label="子项目名称"> </el-table-column>
-     </el-table>
-    </el-dialog>
+      </el-dialog>
   </div>
 </template>
 
 <script>
-import { fetchList, createItem, updateItem, deleteItem } from '@/api/reports'
+import { fetchList, createItem, updateItem, deleteItem } from '@/api/users'
+import { mapGetters, mapActions } from 'vuex'
+
 export default {
   data () {
     return {
@@ -98,7 +85,8 @@ export default {
       listLoading: true,
       temp: {
         id: undefined,
-        name: ''
+        name: '',
+        roles: []
       },
       textMap: {
         create: '创建',
@@ -107,21 +95,29 @@ export default {
       dialogStatus: '',
       dialogFormVisible: false,
       dialogSubprojectsVisible: false,
-      subprojectsData: [],
-      dialogPreviewVisible: false,
-      reportContents: []
+      subprojectsData: []
     }
   },
   created () {
+    this.prepareList()
     this.getList()
   },
+  computed: {
+    ...mapGetters(['rolesList'])
+  },
   methods: {
+    ...mapActions(['getRolesList']),
+    prepareList () {
+      this.getRolesList()
+      console.log(this.rolesList)
+    },
     getList () {
       this.listLoading = true
       fetchList(this.listQuery).then(response => {
-        console.log(response.data)
-        this.list = response.data.items
-        this.total = response.data.total
+        this.list = response.data.data.map(v => {
+          v.edit = false
+          return v
+        })
         this.listLoading = false
       })
     },
@@ -156,9 +152,6 @@ export default {
       deleteItem(id).then(res => {
         this.getList()
       })
-    },
-    handlePreview (row) {
-      this.dialogPreviewVisible = true
     }
   }
 }

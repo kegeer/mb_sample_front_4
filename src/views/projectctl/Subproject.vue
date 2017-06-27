@@ -5,8 +5,8 @@
       <el-button class="filter-item" @click="handleFilter" type="primary" icon="search">搜索</el-button>
       <el-button class="filter-item" @click="handleCreate" type="primary" style="margin-left: 10px" icon="edit">添加子项目</el-button>
       <el-button class="filter-item" @click="handleDownload" type="primary" icon="document">导出</el-button>
-      <el-button class="filter-item" @click="handleOpenPrimer" type="primary" icon="menu">引物表</el-button>
-      <el-button class="filter-item" @click="handleOpenSequencer" type="primary" icon="menu">测序仪表</el-button>
+      <!-- <el-button class="filter-item" @click="handleOpenPrimer" type="primary" icon="menu">引物表</el-button>
+      <el-button class="filter-item" @click="handleOpenSequencer" type="primary" icon="menu">测序仪表</el-button> -->
     </div>
     <el-table :key="tableKey" :data="list" border highlight-current-row style="width: 100%">
       <el-table-column type="expand">
@@ -140,16 +140,16 @@
       </div>
     </el-dialog>
 
-    <el-dialog title="引物表" size="small" :visible.sync="dialogPrimersVisible">
-      <el-table :data="primersData" border fit highlight-current-row style="width: 100%">
+    <!-- <el-dialog title="引物表" size="small" :visible.sync="dialogPrimersVisible">
+      <el-table :data="primersList" border fit highlight-current-row style="width: 100%">
          <el-table-column prop="name" label="名称"> </el-table-column>
      </el-table>
     </el-dialog>
     <el-dialog title="测序仪表" size="small" :visible.sync="dialogSequencersVisible">
-      <el-table :data="sequencersData" border fit highlight-current-row style="width: 100%">
+      <el-table :data="sequencersList" border fit highlight-current-row style="width: 100%">
          <el-table-column prop="name" label="名称"> </el-table-column>
      </el-table>
-    </el-dialog>
+    </el-dialog> -->
   </div>
 </template>
 
@@ -205,9 +205,10 @@ export default {
     getList () {
       this.listLoading = true
       fetchList(this.listQuery).then(response => {
-        console.log(response.data)
-        this.list = response.data.items
-        this.total = response.data.total
+        this.list = response.data.data.map(v => {
+          v.edit = false
+          return v
+        })
         this.listLoading = false
       })
     },

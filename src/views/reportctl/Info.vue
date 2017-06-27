@@ -42,7 +42,8 @@
 
       <el-table-column align="center" label="操作" width="150">
         <template scope="scope">
-          <el-button size="small" type="success" @click="handleModifyStatus(scope.row, 'close')">关闭</el-button>
+          <el-button size="small" type="warning" @click="handleUpdate(scope.row)">修改</el-button>
+          <el-button size="small" type="danger" @click="handleDelete(scope.row)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -60,7 +61,7 @@
     </div>
 
     <el-dialog
-    :title="textMap[dialogStatus]" :visible.sync="dialogFormVisible">
+    :title="textMap[dialogStatus]" :visible.sync="dialogFormVisible"  @close="resetTemp">
       <el-form class="smapll-space" :model="temp" label-position="left" label-width="70px" style="width:400px; margin-left: 50px">
         <el-form-item label="名称">
           <el-input v-model="temp.name"></el-input>
@@ -122,9 +123,10 @@ export default {
     getList () {
       this.listLoading = true
       fetchList(this.listQuery).then(response => {
-        console.log(response.data)
-        this.list = response.data.items
-        this.total = response.data.total
+        this.list = response.data.data.map(v => {
+          v.edit = false
+          return v
+        })
         this.listLoading = false
       })
     },
@@ -162,6 +164,12 @@ export default {
     },
     handleFetchInfoRefs (row) {
       this.dialogInfoRefsVisible = true
+    },
+    resetTemp () {
+      this.temp = {
+        id: undefined,
+        name: ''
+      }
     }
   }
 }

@@ -14,6 +14,7 @@ const Err401 = r => require([], () => r(require('../views/error/401')), 'error')
 
 // 管理界面
 const Dashboard = r => require.ensure([], () => r(require('../views/dashboardctl/Dashboard')), 'dashboardctl')
+const User = r => require.ensure([], () => r(require('../views/dashboardctl/User')), 'dashboardctl')
 
 // 样品管理
 const Sample = r => require.ensure([], () => r(require('../views/samplectl/Sample')), 'samplectl')
@@ -34,14 +35,14 @@ const Experiment = r => require.ensure([], () => r(require('../views/expctl/Expe
 const ExperimentLibrary = r => require.ensure([], () => r(require('../views/expctl/procedures/Library')), 'expctl')
 
 // 数据分析
-const Job = r => require.ensure([], () => r(require('../views/datactl/Job')), 'datactl')
-const Manage = r => require.ensure([], () => r(require('../views/datactl/Manage')), 'datactl')
+// const Job = r => require.ensure([], () => r(require('../views/datactl/Job')), 'datactl')
+// const Manage = r => require.ensure([], () => r(require('../views/datactl/Manage')), 'datactl')
 
 // 報告管理
 const Info = r => require.ensure([], () => r(require('../views/reportctl/Info')), 'reportctl')
 const Designer = r => require.ensure([], () => r(require('../views/reportctl/Designer')), 'reportctl')
 const Category = r => require.ensure([], () => r(require('../views/reportctl/Category')), 'reportctl')
-const Report = r => require.ensure([], () => r(require('../views/reportctl/Report')), 'reportctl')
+const Result = r => require.ensure([], () => r(require('../views/reportctl/Result')), 'reportctl')
 
 export const constantRouterMap = [
   {
@@ -85,6 +86,20 @@ export default new VueRouter({
 })
 
 export const asyncRouterMap = [
+  {
+    path: '/admin',
+    component: Layout,
+    redirect: '/admin/users',
+    name: '管理员面板',
+    icon: 'users',
+    children: [
+      {
+        path: 'users',
+        component: User,
+        name: '用户管理'
+      }
+    ]
+  },
   {
     path: '/samplectl',
     component: Layout,
@@ -163,29 +178,29 @@ export const asyncRouterMap = [
       }
     ]
   },
-  {
-    path: '/datactl',
-    component: Layout,
-    redirect: '/datactl/manage',
-    name: '数据分析',
-    icon: 'bar-chart',
-    children: [
-      {
-        path: 'jobs',
-        component: Job,
-        name: '任务调度'
-      },
-      {
-        path: 'manage',
-        component: Manage,
-        name: '数据整理'
-      }
-    ]
-  },
+  // {
+  //   path: '/datactl',
+  //   component: Layout,
+  //   redirect: '/datactl/manage',
+  //   name: '数据分析',
+  //   icon: 'bar-chart',
+  //   children: [
+  //     {
+  //       path: 'jobs',
+  //       component: Job,
+  //       name: '任务调度'
+  //     },
+  //     {
+  //       path: 'manage',
+  //       component: Manage,
+  //       name: '数据整理'
+  //     }
+  //   ]
+  // },
   {
     path: '/reportctl',
     component: Layout,
-    redirect: '/reportctl/reports',
+    redirect: '/reportctl/results',
     name: '报告管理',
     icon: 'file',
     children: [
@@ -205,9 +220,9 @@ export const asyncRouterMap = [
         name: '模板设计'
       },
       {
-        path: 'reports',
-        component: Report,
-        name: '报告生成'
+        path: 'results',
+        component: Result,
+        name: '结果报告'
       }
     ]
   },

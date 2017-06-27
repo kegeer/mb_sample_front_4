@@ -7,15 +7,22 @@
       <el-button class="filter-item" @click="handleDownload" type="primary" icon="document">导出</el-button>
     </div>
     <el-table :key="tableKey" :data="list" border highlight-current-row style="width: 100%">
-      <el-table-column label="序号">
+      <el-table-column label="分类名称">
         <template align="center" width="65" scope="scope">
           <span>{{ scope.row.name }}</span>
         </template>
       </el-table-column>
+      <el-table-column label="查看数据">
+        <template align="center" width="65" scope="scope">
+          <span class="link-type" @click="handleCategoryInfos(scope.row)">查看</span>
+        </template>
+
+      </el-table-column>
 
       <el-table-column align="center" label="操作" width="150">
         <template scope="scope">
-          <el-button size="small" type="success" @click="handleModifyStatus(scope.row, 'close')">关闭</el-button>
+          <el-button size="small" type="warning" @click="handleUpdate(scope.row)">修改</el-button>
+          <el-button size="small" type="danger" @click="handleDelete(scope.row)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -33,7 +40,7 @@
     </div>
 
     <el-dialog
-    :title="textMap[dialogStatus]" :visible.sync="dialogFormVisible">
+    :title="textMap[dialogStatus]" :visible.sync="dialogFormVisible"  @close="resetTemp">
       <el-form class="smapll-space" :model="temp" label-position="left" label-width="70px" style="width:400px; margin-left: 50px">
         <el-form-item label="名称">
           <el-input v-model="temp.name"></el-input>
@@ -48,6 +55,11 @@
     </el-dialog>
     <el-dialog title="子项表格" :visible.sync="dialogSubprojectsVisible" size="small">
       <el-table :data="subprojectsData" border fit highlight-current-row style="width: 100%">
+         <el-table-column prop="name" label="子项目名称"> </el-table-column>
+     </el-table>
+    </el-dialog>
+    <el-dialog title="分类所含数据" :visible.sync="dialogCategoryInfosVisible" size="small">
+      <el-table :data="categoryInfosData" border fit highlight-current-row style="width: 100%">
          <el-table-column prop="name" label="子项目名称"> </el-table-column>
      </el-table>
     </el-dialog>
@@ -79,7 +91,9 @@ export default {
       dialogStatus: '',
       dialogFormVisible: false,
       dialogSubprojectsVisible: false,
-      subprojectsData: []
+      subprojectsData: [],
+      dialogCategoryInfosVisible: false,
+      categoryInfosData: []
     }
   },
   created () {
@@ -89,9 +103,10 @@ export default {
     getList () {
       this.listLoading = true
       fetchList(this.listQuery).then(response => {
-        console.log(response.data)
-        this.list = response.data.items
-        this.total = response.data.total
+        this.list = response.data.data.map(v => {
+          v.edit = false
+          return v
+        })
         this.listLoading = false
       })
     },
@@ -126,6 +141,15 @@ export default {
       deleteItem(id).then(res => {
         this.getList()
       })
+    },
+    handleCategoryInfos (row) {
+      this.dialogCategoryInfosVisible = true
+    },
+    resetTemp () {
+      this.temp = {
+        id: undefined,
+        name: ''
+      }
     }
   }
 }

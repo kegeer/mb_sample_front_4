@@ -16,6 +16,10 @@ const getters = {
   agenciesList: state => state.resources.agenciesList,
   contactsList: state => state.resources.contactsList,
   roadmapsList: state => state.resources.roadmapsList,
-  positionsList: state => state.resources.positionsList
+  positionsList: state => state.resources.positionsList,
+  clientsList: state => state.resources.clientsList,
+  batchesList: state => state.resources.batchesList,
+  rolesList: state => state.resources.rolesList,
+  usersList: state => state.resources.usersList
 }
 export default getters

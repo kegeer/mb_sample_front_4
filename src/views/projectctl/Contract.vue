@@ -7,7 +7,7 @@
       <el-button class="filter-item" @click="handleDownload" type="primary" icon="document">导出</el-button>
       <el-button class="filter-item" @click="handleOpenSequenceType" type="primary" icon="menu">测序类型表</el-button>
       <el-button class="filter-item" @click="handleOpenSequenceArea" type="primary" icon="menu">测序区域表</el-button>
-      <el-button class="filter-item" @click="handleOpenSequenceData" type="primary" icon="menu">测序数据量表</el-button>
+      <el-button class="filter-item" @click="handleOpenSequenceSize" type="primary" icon="menu">测序数据量表</el-button>
     </div>
     <el-table :key="tableKey" :data="list" border highlight-current-row style="width: 100%">
       <el-table-column label="合同编号">
@@ -103,7 +103,7 @@
     </div>
 
     <el-dialog
-    :title="textMap[dialogStatus]" :visible.sync="dialogFormVisible">
+    :title="textMap[dialogStatus]" :visible.sync="dialogFormVisible" @close="resetTemp">
       <el-form class="smapll-space" :model="temp" label-position="left" label-width="120px" style="width:600px; margin-left: 50px">
         <el-form-item label="合同名称">
           <el-input v-model="temp.name"></el-input>
@@ -155,17 +155,17 @@
     </el-dialog>
 
     <el-dialog title="测序类型表" size="small" :visible.sync="dialogSequenceTypeVisible">
-      <el-table :data="primersData" border fit highlight-current-row style="width: 100%">
+      <el-table :data="sequenceTypesData" border fit highlight-current-row style="width: 100%">
          <el-table-column prop="name" label="名称"> </el-table-column>
      </el-table>
     </el-dialog>
     <el-dialog title="测序数据大小表" size="small" :visible.sync="dialogSequenceSizeVisible">
-      <el-table :data="primersData" border fit highlight-current-row style="width: 100%">
+      <el-table :data="sequenceSizesData" border fit highlight-current-row style="width: 100%">
          <el-table-column prop="name" label="名称"> </el-table-column>
      </el-table>
     </el-dialog>
     <el-dialog title="测序区域表" size="small" :visible.sync="dialogSequenceAreaVisible">
-      <el-table :data="primersData" border fit highlight-current-row style="width: 100%">
+      <el-table :data="sequenceAreasData" border fit highlight-current-row style="width: 100%">
          <el-table-column prop="name" label="名称"> </el-table-column>
      </el-table>
     </el-dialog>
@@ -174,7 +174,12 @@
 </template>
 
 <script>
-import { fetchList, createItem, updateItem, deleteItem } from '@/api/contacts'
+/* eslint-disable no-unused-vars */
+import { fetchList, createItem, updateItem, deleteItem } from '@/api/contracts'
+import { fetchList as fetchStList, createItem as createStList, updateItem as updateStList, deleteItem as deleteStList } from '@/api/sequenceTypes'
+import { fetchList as fetchSsList, createItem as createSsList, updateItem as updateSsList, deleteItem as deleteSsList } from '@/api/sequenceSizes'
+import { fetchList as fetchSaList, createItem as createSaList, updateItem as updateSaList, deleteItem as deleteSaList } from '@/api/sequenceAreas'
+import { mapActions, mapGetters } from 'vuex'
 export default {
   data () {
     return {
@@ -209,21 +214,37 @@ export default {
       dialogFormVisible: false,
       dialogSequenceTypeVisible: false,
       dialogSequenceSizeVisible: false,
-      dialogSequenceAreaVisible: false
+      dialogSequenceAreaVisible: false,
+      sequenceTypesData: [],
+      sequenceSizesData: [],
+      sequenceAreasData: []
     }
   },
   created () {
+    this.prepareList()
     this.getList()
   },
+  computed: {
+    ...mapGetters(['agenciesList', 'contactsList'])
+  },
   methods: {
+    ...mapActions(['getAgenciesList', 'getContactsList']),
+    prepareList () {
+      this.getAgenciesList()
+      this.getContactsList()
+    },
     getList () {
       this.listLoading = true
       fetchList(this.listQuery).then(response => {
-        console.log(response.data)
-        this.list = response.data.items
-        this.total = response.data.total
+        this.list = response.data.data.map(v => {
+          v.edit = false
+          return v
+        })
         this.listLoading = false
       })
+    },
+    clearContact () {
+      this.temp.contact_id = undefined
     },
     handleFilter () {},
     handleCreate () {
@@ -259,12 +280,43 @@ export default {
     },
     handleOpenSequenceType () {
       this.dialogSequenceTypeVisible = true
+      fetchStList().then(res => {
+        this.sequenceTypesData = res.data.data.map(v => {
+          v.edit = false
+        })
+      })
+    },
+    handleOpenSequenceSize () {
+      this.dialogSequenceSizeVisible = true
+      fetchSsList().then(res => {
+        this.sequenceSizesData = res.data.data.map(v => {
+          v.edit = false
+        })
+      })
     },
     handleOpenSequenceArea () {
-      this.dialogSequenceSizeVisible = true
-    },
-    handleOpenSequenceData () {
       this.dialogSequenceAreaVisible = true
+      fetchSaList().then(res => {
+        this.sequenceAreasData = res.data.data.map(v => {
+          v.edit = false
+        })
+      })
+    },
+    resetTemp () {
+      this.temp = {
+        id: undefined,
+        name: '',
+        sign_date: null,
+        start_date: null,
+        end_date: null,
+        area: '',
+        agency_id: null,
+        contact_id: null,
+        product_type: null,
+        sequence_area: null,
+        sequence_type: null,
+        sequence_data: null
+      }
     }
   }
 }

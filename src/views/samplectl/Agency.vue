@@ -50,7 +50,7 @@
     </div>
 
     <el-dialog
-    :title="textMap[dialogStatus]" :visible.sync="dialogFormVisible">
+    :title="textMap[dialogStatus]" :visible.sync="dialogFormVisible"  @close="resetTemp">
       <el-form class="smapll-space" :model="temp" label-position="left" label-width="70px" style="width:400px; margin-left: 50px">
         <el-form-item label="单位名">
           <el-input v-model="temp.name"></el-input>
@@ -90,10 +90,16 @@
         <el-table-column align="center" label="编辑" width="120">
           <template scope="scope">
             <el-button v-show="!scope.row.edit" type="primary" @click="scope.row.edit = true" size="small" icon="edit">编辑</el-button>
-            <el-button v-show="scope.row.edit" type="success" @click="updateContact(scope)" size="small" icon="check">完成</el-button>
+            <el-button v-show="scope.row.edit && !scope.row.create" type="success" @click="updateContact(scope)" size="small" icon="check">完成</el-button>
+            <el-button v-show="scope.row.create" type="success" @click="createContact(scope.row)" size="small" icon="check">创建</el-button>
           </template>
         </el-table-column>
+
       </el-table>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="dialogFormVisible = false">关闭</el-button>
+        <el-button type="primary" @click="addNewContact()">添加新联系人</el-button>
+      </div>
     </el-dialog>
     <el-dialog title="合作单位批次信息" :visible.sync="dialogBatchesVisible" size="small">
        <el-table :data="batchesData" border fit highlight-current-row style="width: 100%">
@@ -111,7 +117,7 @@
 
 <script>
 import { fetchList, createItem, updateItem, deleteItem, fetchAgencyBatches } from '@/api/agencies'
-import { fetchAgencyContacts, updateItem as updateContact } from '@/api/contacts'
+import { fetchAgencyContacts, updateItem as updateContact, createItem as createContact } from '@/api/contacts'
 
 export default {
   data () {
@@ -139,7 +145,8 @@ export default {
       dialogContactsVisible: false,
       contactsData: [],
       dialogBatchesVisible: false,
-      batchesData: []
+      batchesData: [],
+      tempAgencyId: null
     }
   },
   created () {
@@ -192,6 +199,7 @@ export default {
     },
     handleFetchContacts (id) {
       this.dialogContactsVisible = true
+      this.tempAgencyId = id
       fetchAgencyContacts(id).then(res => {
         this.contactsData = res.data.data.map(v => {
           v.edit = false
@@ -219,6 +227,35 @@ export default {
           return v
         })
       })
+    },
+    createContact (row) {
+      console.log(row)
+      createContact(row).then(() => {
+        row.create = false
+        row.edit = false
+        this.$notify({
+          type: 'success',
+          title: '成功',
+          message: '创建成功'
+        })
+      })
+    },
+    addNewContact () {
+      this.contactsData.push({
+        agency_id: this.tempAgencyId,
+        name: '',
+        phone: '',
+        email: '',
+        create: true,
+        edit: true
+      })
+    },
+    resetTemp () {
+      this.temp = {
+        id: undefined,
+        name: '',
+        address: ''
+      }
     }
   }
 }

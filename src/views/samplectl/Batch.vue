@@ -73,7 +73,8 @@
 
       <el-table-column align="center" label="操作" width="150">
         <template scope="scope">
-          <el-button size="small" type="success" @click="handleModifyStatus(scope.row, 'close')">关闭</el-button>
+          <el-button size="small" type="warning" @click="handleUpdate(scope.row)">修改</el-button>
+          <el-button size="small" type="danger" @click="handleDelete(scope.row)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -91,7 +92,7 @@
     </div>
 
     <el-dialog
-    :title="textMap[dialogStatus]" :visible.sync="dialogFormVisible">
+    :title="textMap[dialogStatus]" :visible.sync="dialogFormVisible"  @close="resetTemp">
       <el-form class="smapll-space" :model="temp" label-position="left" label-width="120px" style="width:400px; margin-left: 50px">
         <el-form-item label="所属机构">
           <el-select @change='clearContact' v-model="temp.agency_id" placeholder="选择合作伙伴">
@@ -106,7 +107,7 @@
           </el-select>
         </el-form-item>
         <el-form-item label="寄送时间">
-          <el-date-picker v-model="temp.deliver_time" type="datetime" placeholder="选择日期时间">
+          <el-date-picker v-model="temp.deliver_time" type="datetime" placeholder="选择日期时间" format="yyyy-MM-dd HH-mm-ss">
           </el-date-picker>
         </el-form-item>
         <el-form-item label="到达时间">
@@ -182,8 +183,8 @@ export default {
         id: undefined,
         agency_id: undefined,
         contact_id: undefined,
-        deliver_time: '',
-        arrive_time: '',
+        deliver_time: undefined,
+        arrive_time: undefined,
         express_num: '',
         store_time: '',
         position_id: undefined,
@@ -220,9 +221,10 @@ export default {
     getList () {
       this.listLoading = true
       fetchList(this.listQuery).then(response => {
-        console.log(response.data)
-        this.list = response.data.items
-        this.total = response.data.total
+        this.list = response.data.data.map(v => {
+          v.edit = false
+          return v
+        })
         this.listLoading = false
       })
     },
@@ -238,6 +240,7 @@ export default {
     handleSizeChange () {},
     handleCurrentChange () {},
     create () {
+      console.log(this.temp)
       createItem(this.temp).then(res => {
         this.dialogFormVisible = false
         this.getList()
@@ -267,6 +270,21 @@ export default {
         this.dialogSamplesVisible = true
         this.samplesData = res.data.data
       })
+    },
+    resetTemp () {
+      this.temp = {
+        id: undefined,
+        agency_id: undefined,
+        contact_id: undefined,
+        deliver_time: undefined,
+        arrive_time: undefined,
+        express_num: '',
+        store_time: '',
+        position_id: undefined,
+        project_id: undefined,
+        roadmap_id: undefined,
+        remark: ''
+      }
     }
   }
 }

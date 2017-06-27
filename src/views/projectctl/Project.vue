@@ -28,7 +28,7 @@
 
       <el-table-column label="所有子项目">
         <template align="center" width="65" scope="scope">
-          <span class="link-type" @click="handleFecthSubprojects">查看</span>
+          <span class="link-type" @click="handleFecthSubprojects(scope.row.id)">查看</span>
         </template>
       </el-table-column>
 
@@ -113,7 +113,8 @@ export default {
       },
       dialogStatus: '',
       dialogFormVisible: false,
-      dialogSubprojectsVisible: false
+      dialogSubprojectsVisible: false,
+      subprojectsData: []
     }
   },
   created () {
@@ -123,9 +124,10 @@ export default {
     getList () {
       this.listLoading = true
       fetchList(this.listQuery).then(response => {
-        console.log(response.data)
-        this.list = response.data.items
-        this.total = response.data.total
+        this.list = response.data.data.map(v => {
+          v.edit = false
+          return v
+        })
         this.listLoading = false
       })
     },
@@ -138,6 +140,7 @@ export default {
     handleSizeChange () {},
     handleCurrentChange () {},
     create () {
+      console.log(this.temp)
       createItem(this.temp).then(res => {
         this.dialogFormVisible = false
         this.getList()
@@ -164,7 +167,7 @@ export default {
     handleFecthSubprojects (id) {
       this.dialogSubprojectsVisible = true
       fetchProjectSubprojects(id).then(res => {
-        this.contactData = res.data.data
+        this.subprojectsData = res.data.data
       })
     }
   }

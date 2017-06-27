@@ -71,6 +71,7 @@ router.beforeEach((to, from, next) => {
 router.afterEach(() => {
   NProgress.done()
 })
+
 /* eslint-disable no-new */
 new Vue({
   el: '#app',

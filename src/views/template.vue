@@ -50,12 +50,12 @@
       <el-table :data="subprojectsData" border fit highlight-current-row style="width: 100%">
          <el-table-column prop="name" label="子项目名称"> </el-table-column>
      </el-table>
-    </el-dialog>
+      </el-dialog>
   </div>
 </template>
 
 <script>
-import { fetchList, createItem, updateItem, deleteItem } from '@/api/templates'
+import { fetchList, createItem, updateItem, deleteItem } from '@/api/ '
 export default {
   data () {
     return {
