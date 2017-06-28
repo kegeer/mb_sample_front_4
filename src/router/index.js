@@ -44,6 +44,9 @@ const Designer = r => require.ensure([], () => r(require('../views/reportctl/Des
 const Category = r => require.ensure([], () => r(require('../views/reportctl/Category')), 'reportctl')
 const Result = r => require.ensure([], () => r(require('../views/reportctl/Result')), 'reportctl')
 
+// 测试页面
+const Example = r => require.ensure([], () => r(require('../views/example/Example')), 'example')
+
 export const constantRouterMap = [
   {
     path: '/login',
@@ -223,6 +226,20 @@ export const asyncRouterMap = [
         path: 'results',
         component: Result,
         name: '结果报告'
+      }
+    ]
+  },
+  {
+    path: '/example',
+    component: Layout,
+    redirect: '/example/examples',
+    name: '测试',
+    icon: 'file',
+    children: [
+      {
+        path: 'examples',
+        component: Example,
+        name: '测试'
       }
     ]
   },

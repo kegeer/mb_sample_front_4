@@ -15,7 +15,8 @@
 
       <el-table-column align="center" label="操作" width="150">
         <template scope="scope">
-          <el-button size="small" type="success" @click="handleModifyStatus(scope.row, 'close')">关闭</el-button>
+          <el-button size="small" type="success" @click="showEdit(scope.row)">修改</el-button>
+          <el-button size="small" type="danger" @click="remove(scope.row.id)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -89,9 +90,10 @@ export default {
     getList () {
       this.listLoading = true
       fetchList(this.listQuery).then(response => {
-        console.log(response.data)
-        this.list = response.data.items
-        this.total = response.data.total
+        this.list = response.data.data.map(v => {
+          v.edit = false
+          return v
+        })
         this.listLoading = false
       })
     },
